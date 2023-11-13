@@ -1,0 +1,10 @@
+Loaded dependency [python3/3.9.10]: gcc/10.3.0-binutils-2.36.1
+Loaded module: python3/3.9.10
+
+Loading python3/3.9.10
+  Loading requirement: gcc/10.3.0-binutils-2.36.1
+Loaded module: cuda/11.6
+Traceback (most recent call last):
+  File "/zhome/8d/e/117461/Deep-Learning/test.py", line 2, in <module>
+    import matplotlib.pyplot as plt
+ModuleNotFoundError: No module named 'matplotlib'
