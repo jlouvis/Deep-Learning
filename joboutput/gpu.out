@@ -1,7 +1,6 @@
 loaded images and labels
 images and labels plotted
-label shape:  torch.Size([501, 501])
-image shape:  torch.Size([1, 501, 501])
+torch.Size([501, 501])
 data sets built
 Unet(
   (e11): Conv2d(1, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))

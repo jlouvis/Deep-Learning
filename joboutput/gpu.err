@@ -5,7 +5,7 @@ Loading python3/3.9.10
   Loading requirement: gcc/10.3.0-binutils-2.36.1
 Loaded module: cuda/11.6
 Traceback (most recent call last):
-  File "/zhome/8d/e/117461/Deep-Learning/unet.py", line 326, in <module>
+  File "/zhome/8d/e/117461/Deep-Learning/unet.py", line 317, in <module>
     train_loss = loss_unet(output, labels)
   File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
     return self._call_impl(*args, **kwargs)

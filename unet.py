@@ -82,50 +82,41 @@ print("images and labels plotted")
 
 # Data transformation
 
-# # convert images in images_tensors to Float32
-# images_tensors = [image.type(torch.FloatTensor) for image in images_tensors]
-# # convert labels in labels_tensors to LongTensor
-# labels_tensors = [label.type(torch.LongTensor) for label in labels_tensors]
-
-# # remove channel dimension from labels - required for CrossEntropyLoss
-# labels_tensors = [label[0] for label in labels_tensors]
-
-# # Normalize images_tensors
-# max_pixel = torch.max(torch.stack(images_tensors))
-# mean_pixel = torch.mean(torch.stack(images_tensors[0:400]))
-# std_pixel = torch.std(torch.stack(images_tensors[0:400]))
-# images_norm = []
-# for image in images_tensors:
-#     image_norm = (image - mean_pixel) / std_pixel
-#     images_norm.append(image_norm)
+# Reshape images_tensors to 128x128
+images_501 = []
 
 # Find the maximum pixel value in your dataset
 max_pixel_value = torch.max(torch.stack(images_tensors))
 
-images_norm = []
-for image in images_tensors:
+for image in images_tensors[0:500]:  # only first 10 images - for testing
     # Normalize each pixel value to be between -1 and 1
     image_normalized = image / max_pixel_value
-    images_norm.append(image_normalized)
+    image_501 = image_normalized.unsqueeze(0)
+    images_501.append(image_501.squeeze(0))
 
 # Reshape labels_tensors
-labels_norm = []
-for label in labels_tensors:
+labels_501 = []
+for label in labels_tensors[0:500]:  # only first 10 labels - for testing
+    label_501 = label.unsqueeze(0)
     # convert label to LongTensor - required for CrossEntropyLoss
-    label_long = label.type(torch.LongTensor)
-    labels_norm.append(label_long)
+    label_501 = label_501.type(torch.LongTensor)
+    labels_501.append(label_501.squeeze(0))
+
+# Ensure the number of images and labels is the same
+assert len(images_501) == len(labels_501)
+
+# Ensure the shapes are compatible for stacking
+assert images_501[0].shape == labels_501[0].shape
 
 
 # remove channel dimension from labels - required for CrossEntropyLoss
-labels_norm = [label[0] for label in labels_norm]
-
-print("label shape: ",labels_norm[0].shape)
-print("image shape: ",images_norm[0].shape)
+labels_501 = [label[0] for label in labels_501]
+print(labels_501[0].shape)
 
 # Build data sets
 
 # Build Tensor dataset
-dataset = TensorDataset(torch.stack(images_norm), torch.stack(labels_norm))
+dataset = TensorDataset(torch.stack(images_501), torch.stack(labels_501))
 
 # Split in train (80%), validation (10%) and test (10%) sets
 train_size = int(0.8 * len(dataset))

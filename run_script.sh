@@ -2,7 +2,7 @@
 #!/bin/sh
 ### General options
 ### –- specify queue -- gpua100, gpuv100, gpua10, gpua40, gpuk40
-#BSUB -q gpua100
+#BSUB -q gpuv100
 ### -- set the job Name --
 #BSUB -J testjob
 ### -- ask for number of cores (default: 1) --
