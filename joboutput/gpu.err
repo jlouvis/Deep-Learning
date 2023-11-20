@@ -1,0 +1,18 @@
+Loaded dependency [python3/3.9.10]: gcc/10.3.0-binutils-2.36.1
+Loaded module: python3/3.9.10
+
+Loading python3/3.9.10
+  Loading requirement: gcc/10.3.0-binutils-2.36.1
+Loaded module: cuda/11.6
+Traceback (most recent call last):
+  File "/zhome/8d/e/117461/Deep-Learning/unet.py", line 326, in <module>
+    train_loss = loss_unet(output, labels)
+  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/torch/nn/modules/loss.py", line 1179, in forward
+    return F.cross_entropy(input, target, weight=self.weight,
+  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/torch/nn/functional.py", line 3053, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(input, target, weight, _Reduction.get_enum(reduction), ignore_index, label_smoothing)
+RuntimeError: input and target batch or spatial sizes don't match: target [5, 501, 501], input [5, 3, 496, 496]

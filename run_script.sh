@@ -1,8 +1,8 @@
 
 #!/bin/sh
 ### General options
-### –- specify queue --
-#BSUB -q gpuv100
+### –- specify queue -- gpua100, gpuv100, gpua10, gpua40, gpuk40
+#BSUB -q gpua100
 ### -- set the job Name --
 #BSUB -J testjob
 ### -- ask for number of cores (default: 1) --
@@ -10,7 +10,7 @@
 ### -- Select the resources: 1 gpu in exclusive process mode --
 #BSUB -gpu "num=1:mode=exclusive_process"
 ### -- set walltime limit: hh:mm --  maximum 24 hours for GPU-queues right now
-#BSUB -W 1:00
+#BSUB -W 00:10
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=5GB]"
 ### -- set the email address --
@@ -23,8 +23,8 @@
 #BSUB -N
 ### -- Specify the output and error file. %J is the job-id --
 ### -- -o and -e mean append, -oo and -eo mean overwrite --
-#BSUB -o joboutput/gpu_%J.out
-#BSUB -e joboutput/gpu_%J.err
+#BSUB -oo joboutput/gpu.out
+#BSUB -eo joboutput/gpu.err
 # -- end of LSF options --
 
 # Load the cuda module
