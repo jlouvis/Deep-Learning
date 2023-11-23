@@ -1,6 +1,4 @@
 loaded images and labels
-images and labels plotted
-torch.Size([501, 501])
 data sets built
 Unet(
   (e11): Conv2d(1, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
@@ -49,3 +47,30 @@ Unet(
   (bn42d): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
   (outconv): Conv2d(64, 3, kernel_size=(1, 1), stride=(1, 1))
 )
+Epoch: 1 	Training Loss: 0.617844 	Validation Loss: 0.674963
+Epoch: 2 	Training Loss: 0.588674 	Validation Loss: 0.680452
+Epoch: 3 	Training Loss: 0.584773 	Validation Loss: 0.676812
+Epoch: 4 	Training Loss: 0.583779 	Validation Loss: 0.677391
+Epoch: 5 	Training Loss: 0.583623 	Validation Loss: 0.677377
+Epoch: 6 	Training Loss: 0.583555 	Validation Loss: 0.677064
+Epoch: 7 	Training Loss: 0.583351 	Validation Loss: 0.676249
+Epoch: 8 	Training Loss: 0.583352 	Validation Loss: 0.676514
+Epoch: 9 	Training Loss: 0.583657 	Validation Loss: 0.675990
+Epoch: 10 	Training Loss: 0.583503 	Validation Loss: 0.675662
+Epoch: 11 	Training Loss: 0.583319 	Validation Loss: 0.677830
+Epoch: 12 	Training Loss: 0.583319 	Validation Loss: 0.675220
+Epoch: 13 	Training Loss: 0.583239 	Validation Loss: 0.676593
+Epoch: 14 	Training Loss: 0.583108 	Validation Loss: 0.673994
+Epoch: 15 	Training Loss: 0.583057 	Validation Loss: 0.673913
+Epoch: 16 	Training Loss: 0.583203 	Validation Loss: 0.674937
+Epoch: 17 	Training Loss: 0.583418 	Validation Loss: 0.676907
+Epoch: 18 	Training Loss: 0.583140 	Validation Loss: 0.674163
+Epoch: 19 	Training Loss: 0.583040 	Validation Loss: 0.674184
+Epoch: 20 	Training Loss: 0.583175 	Validation Loss: 0.674455
+Epoch: 21 	Training Loss: 0.583097 	Validation Loss: 0.673590
+Epoch: 22 	Training Loss: 0.583194 	Validation Loss: 0.672264
+Epoch: 23 	Training Loss: 0.583320 	Validation Loss: 0.673893
+Epoch: 24 	Training Loss: 0.583189 	Validation Loss: 0.671336
+Epoch: 25 	Training Loss: 0.583314 	Validation Loss: 0.671050
+Elapsed time: 9.36 min
+Finished Training

@@ -1,7 +1,6 @@
-#matplotlib inline
+# import libraries
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -14,42 +13,11 @@ from torchvision.utils import make_grid
 import torch.nn.init as init
 from torch.nn import Linear, Conv2d, BatchNorm2d, MaxPool2d, Dropout2d
 from torch.nn.functional import relu, elu, relu6, sigmoid, tanh, softmax
-from sklearn import metrics
 from torchvision.transforms import ToTensor
-import rasterio
-from rasterio.plot import show
 import os
 from glob import glob
 from PIL import Image
-
-path = 'data'
-
-with rasterio.open(path) as image:
-    image_array = image.read()
-print(type(image_array))
-show(image_array,cmap='gray')
-
-path_to_images = 'data'
-
-images = []
-for subdirectory in os.listdir(path_to_images):
-    subdirectory_path = os.path.join(path_to_images, subdirectory)
-    with rasterio.open(subdirectory_path) as image:
-        image_array = image.read()
-        images.append(image_array)
-
-path_to_labels = 'labels'
-labels = []
-
-# Use glob to find all label files in the directory
-label_files = glob(os.path.join(path_to_labels, '*.tif'))
-
-for label_file in label_files:
-    with rasterio.open(label_file) as src:
-        label_array = src.read(1)  # Assuming the label data is in the first band (1-based index)
-        labels.append(label_array)
-
-# The 'with' statement will automatically close the rasterio dataset when you exit the block
+import time
 
 path = 'data'
 

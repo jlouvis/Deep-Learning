@@ -44,79 +44,35 @@ for subdirectory in os.listdir(path):
     labels_tensors.append(single_label)
 
 print("loaded images and labels")
-first_10_images = images_tensors[:10]  # Get the first 10 images
-
-# Create a figure with tight layout
-fig, axes = plt.subplots(2, 5, figsize=(12, 6))
-plt.tight_layout()
-# Iterate through the images and display them in the subplots with titles
-for i, ax in enumerate(axes.flat):
-    if i < len(first_10_images):
-        image = first_10_images[i][0]  # Remove the extra dimension
-        ax.imshow(image, cmap='gray')  # Use 'cmap' to specify the colormap (e.g., 'gray' for grayscale)
-        ax.axis('off')  # Turn off the axis labels
-        ax.set_title(f"Image {i+1}", fontsize=12)  # Add a title with "Image 1", "Image 2", etc.
-
-# Show the plot
-# save figure in Figure folder
-#plt.savefig('figures/first_10_images.png')
-
-label_images = labels_tensors[:10]  # Get the first 10 label images
-
-# Create a figure with tight layout
-fig, axes = plt.subplots(2, 5, figsize=(12, 6))
-plt.tight_layout()
-
-# Iterate through the label images and display them in the subplots with titles
-for i, ax in enumerate(axes.flat):
-    if i < len(label_images):
-        image = label_images[i][0]  # Remove the extra dimension
-        ax.imshow(image, cmap='gray')  # Use 'cmap' to specify the colormap (e.g., 'gray' for grayscale)
-        ax.axis('off')  # Turn off the axis labels
-        ax.set_title(f"Label {i+1}", fontsize=12)  # Add a title with "Image 1", "Image 2", etc.
-
-# save figure in Figure folder
-#plt.savefig('figures/first_10_labels.png')
-
-print("images and labels plotted")
 
 # Data transformation
-
-# Reshape images_tensors to 128x128
-images_501 = []
-
-# Find the maximum pixel value in your dataset
-max_pixel_value = torch.max(torch.stack(images_tensors))
-
-for image in images_tensors[0:500]:  # only first 10 images - for testing
-    # Normalize each pixel value to be between -1 and 1
-    image_normalized = image / max_pixel_value
-    image_501 = image_normalized.unsqueeze(0)
-    images_501.append(image_501.squeeze(0))
-
-# Reshape labels_tensors
-labels_501 = []
-for label in labels_tensors[0:500]:  # only first 10 labels - for testing
-    label_501 = label.unsqueeze(0)
-    # convert label to LongTensor - required for CrossEntropyLoss
-    label_501 = label_501.type(torch.LongTensor)
-    labels_501.append(label_501.squeeze(0))
-
-# Ensure the number of images and labels is the same
-assert len(images_501) == len(labels_501)
-
-# Ensure the shapes are compatible for stacking
-assert images_501[0].shape == labels_501[0].shape
-
-
 # remove channel dimension from labels - required for CrossEntropyLoss
-labels_501 = [label[0] for label in labels_501]
-print(labels_501[0].shape)
+labels_tensors = [label[0] for label in labels_tensors]
+# convert labels to LongTensor - required for CrossEntropyLoss
+labels_tensors = [label.type(torch.LongTensor) for label in labels_tensors]
+# convert images to FloatTensor - required for CrossEntropyLoss
+images_tensors = [image.type(torch.FloatTensor) for image in images_tensors]
+
+max_pixel = torch.max(torch.stack(images_tensors))
+mean_pixel = torch.mean(torch.stack(images_tensors))
+std_pixel = torch.std(torch.stack(images_tensors))
+
+# Normalize images_128
+# images_norm = []
+# for image in images_tensors:
+#     image_norm = (image - mean_pixel) / std_pixel
+#     images_norm.append(image_norm)
+
+# Normalize by dividing by max pixel / other method so that values are between 0 and 1
+images_norm = []
+for image in images_tensors:
+    image_norm = image / max_pixel
+    images_norm.append(image_norm)
 
 # Build data sets
 
 # Build Tensor dataset
-dataset = TensorDataset(torch.stack(images_501), torch.stack(labels_501))
+dataset = TensorDataset(torch.stack(images_norm), torch.stack(labels_tensors))
 
 # Split in train (80%), validation (10%) and test (10%) sets
 train_size = int(0.8 * len(dataset))
@@ -126,7 +82,7 @@ test_size = len(dataset) - train_size - val_size
 train_set, val_set, test_set = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
 
 # batch size
-batch_size = 5
+batch_size = 8
 
 # Build data loader
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True) # shuffle training set
@@ -257,6 +213,7 @@ class Unet(nn.Module):
 
         # Output layer
         out = self.outconv(xd42)
+        out = F.interpolate(out, size=(501,501), mode='bilinear', align_corners=False)
 
         return out
 
@@ -272,7 +229,7 @@ print(net)
 loss_unet = nn.CrossEntropyLoss()
 
 # optimizer: ADAM
-optimizer_unet = optim.Adam(net.parameters(), lr=1e-3)
+optimizer_unet = optim.Adam(net.parameters(), lr=0.0001)
 
 # Train the model
 
@@ -365,4 +322,12 @@ for epoch in range(n_epochs):
 endtime = time.time()
 print(f"Elapsed time: {(endtime - starttime)/60:.2f} min")
 print("Finished Training")
+
+plt.plot(np.linspace(1, n_epochs, 25), train_losses, 'b', label='Training loss')
+plt.plot(np.linspace(1, n_epochs, 25), validation_losses, 'r', label='Validation loss')
+plt.title('Training and Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.savefig('figures/loss.png')
 
