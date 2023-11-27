@@ -49,6 +49,8 @@ print("loaded images and labels")
 # remove channel dimension from labels - required for CrossEntropyLoss
 labels_tensors = [label[0] for label in labels_tensors]
 # convert labels to LongTensor - required for CrossEntropyLoss
+for i in range(len(labels_tensors)):
+    labels_tensors[i] = labels_tensors[i] * 2
 labels_tensors = [label.type(torch.LongTensor) for label in labels_tensors]
 # convert images to FloatTensor - required for CrossEntropyLoss
 images_tensors = [image.type(torch.FloatTensor) for image in images_tensors]
@@ -82,7 +84,7 @@ test_size = len(dataset) - train_size - val_size
 train_set, val_set, test_set = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
 
 # batch size
-batch_size = 8
+batch_size = 18
 
 # Build data loader
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True) # shuffle training set
@@ -229,7 +231,7 @@ print(net)
 loss_unet = nn.CrossEntropyLoss()
 
 # optimizer: ADAM
-optimizer_unet = optim.Adam(net.parameters(), lr=0.0001)
+optimizer_unet = optim.Adam(net.parameters(), lr=1e-3)
 
 # Train the model
 
@@ -242,7 +244,7 @@ val_steps = len(val_set)//batch_size
 test_steps = len(test_set)//batch_size
 
 # validation loss
-valid_loss_min = np.Inf
+#valid_loss_min = np.Inf
 
 # lists to store training and validation losses
 train_losses = []
@@ -323,8 +325,8 @@ endtime = time.time()
 print(f"Elapsed time: {(endtime - starttime)/60:.2f} min")
 print("Finished Training")
 
-plt.plot(np.linspace(1, n_epochs, 25), train_losses, 'b', label='Training loss')
-plt.plot(np.linspace(1, n_epochs, 25), validation_losses, 'r', label='Validation loss')
+plt.plot(np.linspace(1, n_epochs, 10), train_losses, 'b', label='Training loss')
+plt.plot(np.linspace(1, n_epochs, 10), validation_losses, 'r', label='Validation loss')
 plt.title('Training and Validation Loss')
 plt.xlabel('Epochs')
 plt.ylabel('Loss')

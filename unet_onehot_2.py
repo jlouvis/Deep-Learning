@@ -18,6 +18,7 @@ import os
 from glob import glob
 from PIL import Image
 import time
+import torch
 
 # Set random seed for reproducibility
 np.random.seed(42)
@@ -216,92 +217,90 @@ optimizer_unet = optim.Adam(net.parameters(), lr=1e-5)
 # number of epochs to train the model
 n_epochs = 50
 
-# Steps
-train_steps = len(train_set)//batch_size
-val_steps = len(val_set)//batch_size
-test_steps = len(test_set)//batch_size
-
-# lists to store training and validation losses
+# initialize lists to store losses and accuracies
 train_losses = []
-validation_losses = []
+val_losses = []
+train_accuracies = []
+val_accuracies = []
 
-net.train()
-
-# start time (for printing elapsed time per epoch)
-starttime = time.time()
 for epoch in range(n_epochs):
-    
-    total_train_loss = 0
-    total_val_loss = 0
+    # Training
+    net.train()
+    train_loss = 0
+    correct_train = 0
+    total_train = 0
 
-    # loop over training data
     for images, labels in train_loader:
-        # send the input to device
         images, labels = images.to(device), labels.to(device)
-        images = images.to(torch.float32)
-        
-        # Complete forward pass through model
-        output = net(images)
-        
-        # Compute the loss
-        train_loss = loss_unet(output, labels)
-        #scheduler.step(train_loss)
 
-        # clean up gradients from previous run
         optimizer_unet.zero_grad()
-
-        # Compute gradients using back propagation
-        train_loss.backward()
-
-        # Take a step with the optimizer to update the weights
+        outputs = net(images)
+        loss = loss_unet(outputs, labels.argmax(dim=1))
+        loss.backward()
         optimizer_unet.step()
 
-        # add the loss to the training set's running loss
-        total_train_loss += train_loss
+        # compute training loss
+        train_loss += loss.item()
 
-    # Turn off gradients for validation, saves memory and computations
+        # compute training accuracy
+        _, predicted = torch.max(outputs, 1)
+        total_train += labels.size(0)
+        # correct train - ensure correct dimensions
+        correct_train += (predicted == labels.argmax(dim=1)).sum().item()
+
+    train_loss /= len(train_loader)
+    train_accuracy = correct_train / total_train
+    train_losses.append(train_loss)
+    train_accuracies.append(train_accuracy)
+
+    # Validation
+    net.eval()
+    val_loss = 0
+    correct_val = 0
+    total_val = 0
+
     with torch.no_grad():
-        # set the model to evaluation mode
-        net.eval()
-
-        # loop over validation data
         for images, labels in val_loader:
-            # send the input to device
             images, labels = images.to(device), labels.to(device)
-            images = images.to(torch.float32)
 
-            # Complete forward pass through model
-            output = net(images)
+            outputs = net(images)
+            loss = loss_unet(outputs, labels.argmax(dim=1))
 
-            # Compute the loss
-            val_loss = loss_unet(output, labels)
-            #scheduler.step(val_loss)
+            val_loss += loss.item()
 
-            # add the loss to the validation set's running loss 
-            total_val_loss += val_loss
+            # compute validation accuracy
+            _, predicted = torch.max(outputs, 1)
+            total_val += labels.size(0)
+            # correct val - ensure correct dimensions
+            correct_val += (predicted == labels.argmax(dim=1)).sum().item()
 
-    # print training/validation statistics
-    avg_train_loss = total_train_loss/train_steps
-    avg_val_loss = total_val_loss/val_steps
+    val_loss /= len(val_loader)
+    val_accuracy = correct_val / total_val
+    val_losses.append(val_loss)
+    val_accuracies.append(val_accuracy)
 
-    # update training history
-    #train_losses.append(avg_train_loss.cpu().numpy())
-    train_losses.append(avg_train_loss.cpu().detach().numpy())
-    validation_losses.append(avg_val_loss.cpu().numpy())
+    # Print epoch results
+    print(f"Epoch {epoch+1}/{n_epochs}:")
+    print(f"Train Loss: {train_loss:.4f} | Train Accuracy: {train_accuracies[-1]:.2f}%")
+    print(f"Val Loss: {val_loss:.4f} | Val Accuracy: {val_accuracies[-1]:.2f}%")
+    print()
 
-    # print training/validation statistics
-    print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}'.format(
-        epoch+1, avg_train_loss, avg_val_loss))
-    
-# display time elapsed for epoch
-endtime = time.time()
-print(f"Elapsed time: {(endtime - starttime)/60:.2f} min")
-print("Finished Training")
-
-plt.plot(np.linspace(1, n_epochs, n_epochs), train_losses, 'b', label='Training loss')
-plt.plot(np.linspace(1, n_epochs, n_epochs), validation_losses, 'r', label='Validation loss')
-plt.title('Training and Validation Loss')
-plt.xlabel('Epochs')
+# Plot the train and validation loss
+plt.figure(figsize=(10, 5))
+plt.plot(range(1, n_epochs+1), train_losses, label='Train Loss')
+plt.plot(range(1, n_epochs+1), val_losses, label='Val Loss')
+plt.xlabel('Epoch')
 plt.ylabel('Loss')
+plt.title('Train and Validation Loss')
 plt.legend()
 plt.savefig('figures/loss.png')
+
+# Plot the train and validation accuracy
+plt.figure(figsize=(10, 5))
+plt.plot(range(1, n_epochs+1), train_accuracies, label='Train Accuracy')
+plt.plot(range(1, n_epochs+1), val_accuracies, label='Val Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.title('Train and Validation Accuracy')
+plt.legend()
+plt.savefig('figures/accuracy.png')

@@ -3,7 +3,6 @@ import numpy as np
 
 import time
 import matplotlib.pyplot as plt
-import seaborn as sns
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -16,10 +15,8 @@ from torchvision.utils import make_grid
 import torch.nn.init as init
 from torch.nn import Linear, Conv2d, BatchNorm2d, MaxPool2d, Dropout2d
 from torch.nn.functional import relu, elu, relu6, sigmoid, tanh, softmax
-from sklearn import metrics
+#from sklearn import metrics
 from torchvision.transforms import ToTensor
-import rasterio
-from rasterio.plot import show
 import os
 from glob import glob
 from PIL import Image
@@ -41,22 +38,21 @@ for subdirectory in os.listdir(path):
     single_label = ToTensor()(single_label)
     labels_tensors.append(single_label)
 
+
+# GPU
 use_cuda = torch.cuda.is_available()
-print("Running GPU.") if use_cuda else print("No GPU available.")
-
-
 def get_variable(x):
     """ Converts tensors to cuda, if available. """
     if use_cuda:
         return x.cuda()
     return x
-
-
 def get_numpy(x):
     """ Get numpy array for both cuda and not. """
     if use_cuda:
         return x.cpu().data.numpy()
     return x.data.numpy()
+
+
 class VGGnet(nn.Module):
     def __init__(self, n_class):
         super().__init__()
@@ -332,4 +328,5 @@ plt.title('Training and Validation Loss Over Epochs')
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.legend()
-plt.show()
+#plt.show()
+plt.savefig('figures/VGGnet_loss.png')

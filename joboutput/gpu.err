@@ -4,15 +4,3 @@ Loaded module: python3/3.9.10
 Loading python3/3.9.10
   Loading requirement: gcc/10.3.0-binutils-2.36.1
 Loaded module: cuda/11.6
-Traceback (most recent call last):
-  File "/zhome/8d/e/117461/Deep-Learning/unet.py", line 326, in <module>
-    plt.plot(np.linspace(1, n_epochs, 2), train_losses, 'b', label='Training loss')
-  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/matplotlib/pyplot.py", line 3578, in plot
-    return gca().plot(
-  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/matplotlib/axes/_axes.py", line 1721, in plot
-    lines = [*self._get_lines(self, *args, data=data, **kwargs)]
-  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/matplotlib/axes/_base.py", line 303, in __call__
-    yield from self._plot_args(
-  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/matplotlib/axes/_base.py", line 499, in _plot_args
-    raise ValueError(f"x and y must have same first dimension, but "
-ValueError: x and y must have same first dimension, but have shapes (2,) and (25,)
