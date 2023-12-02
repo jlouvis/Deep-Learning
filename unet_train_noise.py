@@ -20,8 +20,7 @@ from PIL import Image
 import time
 import torch
 # import unet
-import unet_architecture
-from unet_architecture import Unet
+from unet_batchnorm_architecture import Unet_batch as Unet
 
 # GPU
 use_cuda = torch.cuda.is_available()
@@ -147,7 +146,7 @@ def accuracy(outputs, labels):
 
 # Function to add Gaussian noise to images
 def add_gaussian_noise(image, mean=0, std=1):
-    noise = torch.randn(image.size()) * std + mean
+    noise = torch.randn(image.size(), device=image.device) * std + mean
     noisy_image = image + noise
     return noisy_image
 
@@ -237,37 +236,37 @@ plt.legend()
 plt.text(n_epochs, val_accuracies[-1], f'{val_accuracies[-1]:.4f}')
 plt.savefig('figures/unet_accuracyflip.png')
 
-# For just 1 image, show the original, the label and the prediction side by side
-net.eval()
-with torch.no_grad():
-    for images, labels in test_loader:
-        images, labels = get_variable(images), get_variable(labels)
-        outputs = net(images)
-        break
+# # For just 1 image, show the original, the label and the prediction side by side
+# net.eval()
+# with torch.no_grad():
+#     for images, labels in test_loader:
+#         images, labels = get_variable(images), get_variable(labels)
+#         outputs = net(images)
+#         break
     
-image = images[0].squeeze().cpu().numpy()
-label = labels[0].squeeze().cpu().numpy()
-output = outputs[0].squeeze().cpu().numpy()
+# image = images[0].squeeze().cpu().numpy()
+# label = labels[0].squeeze().cpu().numpy()
+# output = outputs[0].squeeze().cpu().numpy()
 
-# Rearrange dimensions from (3, 256, 256) to (256, 256, 3)
-image = np.transpose(image, (1, 2, 0))  # If image shape is (3, 256, 256)
-label = np.transpose(label, (1, 2, 0))  # If label shape is (3, 256, 256)
-output = np.transpose(output, (1, 2, 0))  # If output shape is (3, 256, 256)
+# # Rearrange dimensions from (3, 256, 256) to (256, 256, 3)
+# image = np.transpose(image, (1, 2, 0))  # If image shape is (3, 256, 256)
+# label = np.transpose(label, (1, 2, 0))  # If label shape is (3, 256, 256)
+# output = np.transpose(output, (1, 2, 0))  # If output shape is (3, 256, 256)
 
-fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+# fig, axes = plt.subplots(1, 3, figsize=(12, 4))
 
-axes[0].imshow(image, cmap='gray')
-axes[0].set_title('Original Image')
-axes[0].axis('off')
+# axes[0].imshow(image, cmap='gray')
+# axes[0].set_title('Original Image')
+# axes[0].axis('off')
 
-axes[1].imshow(label, cmap='gray')
-axes[1].set_title('Actual Label')
-axes[1].axis('off')
+# axes[1].imshow(label, cmap='gray')
+# axes[1].set_title('Actual Label')
+# axes[1].axis('off')
 
-axes[2].imshow(output, cmap='gray')
-axes[2].set_title('Predicted Label')
-axes[2].axis('off')
+# axes[2].imshow(output, cmap='gray')
+# axes[2].set_title('Predicted Label')
+# axes[2].axis('off')
 
-plt.tight_layout()
-# Save the figure to the 'Figures' folder
-plt.savefig('figures/unet_sample_prediction.png')
+# plt.tight_layout()
+# # Save the figure to the 'Figures' folder
+# plt.savefig('figures/unet_sample_prediction.png')
