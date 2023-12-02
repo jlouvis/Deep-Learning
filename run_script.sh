@@ -1,8 +1,8 @@
 
 #!/bin/sh
 ### General options
-### –- specify queue -- gpua100, gpuv100, gpua10, gpua40, gpuk40
-#BSUB -q gpuv100
+### –- specify queue -- gpua100, gpuv100, gpua10, gpua40
+#BSUB -q gpua10
 ### -- set the job Name --
 #BSUB -J testjob
 ### -- ask for number of cores (default: 1) --
@@ -38,4 +38,5 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # run training
-python3 vggnet_train.py
+python3 unet_train_noise.py
+# python3 VGG_correct_try_pnt.py

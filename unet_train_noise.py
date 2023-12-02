@@ -73,11 +73,29 @@ for img_filename, lbl_filename in zip(image_files, label_files):
         single_label = ToTensor()(single_label)
         labels_tensors.append(single_label)
 
+
+# Define data augmentation transformations
+augmentation_transforms  = transforms.Compose([
+    transforms.RandomHorizontalFlip(),   # Randomly flip the image horizontally
+    transforms.RandomVerticalFlip(),     # Randomly flip the image vertically
+    transforms.RandomRotation(degrees=45), # Randomly rotate the image by a certain degree
+    # Add more transformations as needed
+])
+
+
+# Apply transformations to both images and labels simultaneously
+transformed_data = [(augmentation_transforms(image), augmentation_transforms(label)) for image, label in zip(images_tensors, labels_tensors)]
+
+# Separate the transformed images and labels
+images_tensors, labels_tensors = zip(*transformed_data)
+
+
 # Crop images and labels to 256x256 and convert images to float
 transform = transforms.CenterCrop((256, 256))
 images_cropped = [transform(image) for image in images_tensors]
 images_256 = [image.type(torch.FloatTensor) for image in images_cropped]
 labels_cropped = [transform(label) for label in labels_tensors]
+
 
 # Convert labels to one-hot encoding
 labels_one_hot = [F.one_hot(label.squeeze().long(), num_classes=3).permute(2, 0, 1).float() for label in labels_cropped]
@@ -190,7 +208,7 @@ plt.title('Train and Validation Loss')
 plt.legend()
 # show val loss as text on plot for last epoch
 plt.text(n_epochs, val_losses[-1], f'{val_losses[-1]:.4f}')
-plt.savefig('figures/unet_loss.png')
+plt.savefig('figures/unet_lossflip.png')
 
 # Plot the train and validation accuracy
 plt.figure(figsize=(10, 5))
@@ -202,7 +220,7 @@ plt.title('Train and Validation Accuracy')
 plt.legend()
 # show val accuracy as text on plot for last epoch
 plt.text(n_epochs, val_accuracies[-1], f'{val_accuracies[-1]:.4f}')
-plt.savefig('figures/unet_accuracy.png')
+plt.savefig('figures/unet_accuracyflip.png')
 
 # For just 1 image, show the original, the label and the prediction side by side
 net.eval()

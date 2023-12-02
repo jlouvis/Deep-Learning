@@ -5,14 +5,10 @@ Loading python3/3.9.10
   Loading requirement: gcc/10.3.0-binutils-2.36.1
 Loaded module: cuda/11.6
 Traceback (most recent call last):
-  File "/zhome/8d/e/117461/Deep-Learning/vggnet_train.py", line 162, in <module>
-    loss = loss_VGGnet(outputs, labels.argmax(dim=1))
-  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/torch/nn/modules/loss.py", line 1179, in forward
-    return F.cross_entropy(input, target, weight=self.weight,
-  File "/zhome/8d/e/117461/Deep-Learning/.venv/lib/python3.9/site-packages/torch/nn/functional.py", line 3053, in cross_entropy
-    return torch._C._nn.cross_entropy_loss(input, target, weight, _Reduction.get_enum(reduction), ignore_index, label_smoothing)
-RuntimeError: input and target batch or spatial sizes don't match: target [4, 256, 256], input [4, 3, 128, 128]
+  File "/zhome/34/9/181032/Deep-Learning/unet_train_noise.py", line 238, in <module>
+    image = np.transpose(image, (1, 2, 0))  # If image shape is (3, 256, 256)
+  File "/zhome/34/9/181032/Deep-Learning/.venv/lib/python3.9/site-packages/numpy/core/fromnumeric.py", line 655, in transpose
+    return _wrapfunc(a, 'transpose', axes)
+  File "/zhome/34/9/181032/Deep-Learning/.venv/lib/python3.9/site-packages/numpy/core/fromnumeric.py", line 59, in _wrapfunc
+    return bound(*args, **kwds)
+ValueError: axes don't match array
