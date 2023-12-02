@@ -3,7 +3,6 @@
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-import seaborn as sns
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -16,16 +15,41 @@ from torchvision.utils import make_grid
 import torch.nn.init as init
 from torch.nn import Linear, Conv2d, BatchNorm2d, MaxPool2d, Dropout2d
 from torch.nn.functional import relu, elu, relu6, sigmoid, tanh, softmax
-from sklearn import metrics
+# from sklearn import metrics
 from torchvision.transforms import ToTensor
-import rasterio
-from rasterio.plot import show
 import os
 from glob import glob
 from PIL import Image
-path = "data"
+
+np.random.seed(42)
+
+image_path = 'data'
+label_path = 'labels'
 
 images_tensors = []
+labels_tensors = []
+
+image_files = sorted(os.listdir(image_path))
+label_files = sorted(os.listdir(label_path))
+
+for img_filename, lbl_filename in zip(image_files, label_files):
+    if img_filename[9:12] == lbl_filename[7:10]:  # Matching filenames by position
+        img_filepath = os.path.join(image_path, img_filename)
+        lbl_filepath = os.path.join(label_path, lbl_filename)
+
+        # Reading and converting images to tensors
+        single_image = Image.open(img_filepath)
+        single_image = ToTensor()(single_image)
+        images_tensors.append(single_image)
+
+        # Reading and converting labels to tensors
+        single_label = Image.open(lbl_filepath)
+        single_label = ToTensor()(single_label)
+        labels_tensors.append(single_label)
+
+
+
+'''images_tensors = []
 for subdirectory in os.listdir(path):
     subdirectory_path = os.path.join(path, subdirectory)
     single_image = Image.open(subdirectory_path)
@@ -40,6 +64,7 @@ for subdirectory in os.listdir(path):
     single_label = Image.open(subdirectory_path)
     single_label = ToTensor()(single_label)
     labels_tensors.append(single_label)
+'''
 
 use_cuda = torch.cuda.is_available()
 print("Running GPU.") if use_cuda else print("No GPU available.")
@@ -173,10 +198,11 @@ net = VGGnet(3) # 3 classes
 if use_cuda:
     net.cuda()
 
-device = torch.device('cpu')  # use cuda or cpu
+device = torch.device("cuda" if use_cuda else "cpu")  # use cuda or cpu
+ # use cuda or cpu
 net.to(device)
 #print(net)
-'''
+
 class DiceLoss(nn.Module):
     def __init__(self):
         super(DiceLoss, self).__init__()
@@ -192,21 +218,21 @@ class DiceLoss(nn.Module):
         return 1.0 - dice_coefficient
 # loss function: Cross entropy loss
 loss_VGGnet = DiceLoss()
-'''
+
 num_classes = 3  # Change this value based on your specific number of classes
 
 # Define the Cross Entropy Loss
-loss_VGGnet = nn.CrossEntropyLoss()
+#loss_VGGnet = nn.CrossEntropyLoss()
 
 # optimizer: ADAM
 optimizer_VGGnet = optim.Adam(net.parameters(), lr=1e-3)
 
-train_images = images_tensors[:10]#[:350]
-train_labels = labels_tensors[:10]#[:350]
-val_images = images_tensors[:11:16]#[350:400]
-val_labels = labels_tensors[:11:16]#[350:400]
-test_images = images_tensors[17:21]#[400:]
-test_labels = labels_tensors[17:21]#[400:]
+train_images = images_tensors[:350]#[:10]#[:350]
+train_labels = labels_tensors[:350]#[:10]#[:350]
+val_images = images_tensors[350:400]#[:11:16]#[350:400]
+val_labels = labels_tensors[350:400]#[:11:16]#[350:400]
+test_images = images_tensors[400:]#[17:21]#[400:]
+test_labels = labels_tensors[400:]#[17:21]#[400:]
 # batch size
 batch_size = 10
 
@@ -229,15 +255,16 @@ print("Image tensor shape:", images.shape)
 print(labels.shape)
 
 # number of epochs to train the model
-n_epochs = 2
+n_epochs = 50
 
 # Steps
 train_steps = len(train_loader)//batch_size
+print('Train steps:',train_steps)
 val_steps = len(val_loader)//batch_size
 test_steps = len(test_loader)//batch_size
 
 # validation loss
-valid_loss_min = np.Inf
+valid_loss_min = 20
 
 # lists to store training and validation losses
 train_losses = []
@@ -247,7 +274,7 @@ validation_losses = []
 train_accuracies = []
 validation_accuracies = []
 
-net.train()
+
 
 # start time (for printing elapsed time per epoch)
 starttime = time.time()
@@ -255,7 +282,7 @@ for epoch in range(n_epochs):
     
     total_train_loss = 0
     total_val_loss = 0
-
+    net.train()
     # loop over training data
     for images, labels in train_loader:
         # send the input to device
@@ -311,9 +338,9 @@ for epoch in range(n_epochs):
             #print('total_val_loss:',total_val_loss)
 
     # print training/validation statistics
-    avg_train_loss = total_train_loss#/train_steps
+    avg_train_loss = total_train_loss/train_steps
     print('avg_train_loss:',avg_train_loss)
-    avg_val_loss = total_val_loss#/val_steps
+    avg_val_loss = total_val_loss/val_steps
     print('avg_val_loss:',avg_val_loss)
 
     # update training history
@@ -336,4 +363,5 @@ plt.title('Training and Validation Loss Over Epochs')
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.legend()
-plt.show()
+#plt.show()
+plt.savefig('figures/vggnet_loss.png')
