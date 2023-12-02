@@ -47,10 +47,10 @@ for img_filename, lbl_filename in zip(image_files, label_files):
         single_label = ToTensor()(single_label)
         labels_tensors.append(single_label)
 
-labels_one_hot = [F.one_hot(label.squeeze().long(), num_classes=3).permute(2, 0, 1).float() for label in labels_cropped]
+labels_one_hot = [F.one_hot(label.squeeze().long(), num_classes=3).permute(2, 0, 1).float() for label in labels_tensors]
 labels_stacked = torch.stack(labels_one_hot)
-max_pixel = torch.max(torch.stack(images_256[0:400]))
-images_normalized = [image / max_pixel for image in images_256]
+max_pixel = torch.max(torch.stack(images_tensors[0:400]))
+images_normalized = [image / max_pixel for image in images_tensors]
 dataset = TensorDataset(torch.stack(images_normalized), labels_stacked)
 #Splitting the dataset
 train_size = int(0.8 * len(dataset))
@@ -300,6 +300,7 @@ validation_accuracies = []
 
 # start time (for printing elapsed time per epoch)
 starttime = time.time()
+print('Training started!')
 for epoch in range(n_epochs):
     
     total_train_loss = 0
