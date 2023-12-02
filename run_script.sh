@@ -38,4 +38,4 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # run training
-python3 vggnet_train.py
+python3 unet_train.py

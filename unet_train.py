@@ -204,37 +204,177 @@ plt.legend()
 plt.text(n_epochs, val_accuracies[-1], f'{val_accuracies[-1]:.4f}')
 plt.savefig('figures/unet_accuracy.png')
 
-# For just 1 image, show the original, the label and the prediction side by side
-net.eval()
-with torch.no_grad():
-    for images, labels in test_loader:
-        images, labels = get_variable(images), get_variable(labels)
-        outputs = net(images)
-        break
-    
-image = images[0].squeeze().cpu().numpy()
-label = labels[0].squeeze().cpu().numpy()
-output = outputs[0].squeeze().cpu().numpy()
+# Get a single batch of data from the test_loader
+images, labels = next(iter(test_loader))
 
-# Rearrange dimensions from (3, 256, 256) to (256, 256, 3)
-image = np.transpose(image, (1, 2, 0))  # If image shape is (3, 256, 256)
-label = np.transpose(label, (1, 2, 0))  # If label shape is (3, 256, 256)
-output = np.transpose(output, (1, 2, 0))  # If output shape is (3, 256, 256)
+# Move data to device
+images = get_variable(images)
+labels = get_variable(labels)
 
-fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+# Forward pass through the network
+outputs = net(images)
 
-axes[0].imshow(image, cmap='gray')
-axes[0].set_title('Original Image')
-axes[0].axis('off')
+# Convert to numpy arrays
+images_np = get_numpy(images[0])  # Assuming you want to visualize the first image in the batch
+labels_np = get_numpy(labels[0])
+outputs_np = get_numpy(outputs[0])
 
-axes[1].imshow(label, cmap='gray')
-axes[1].set_title('Actual Label')
-axes[1].axis('off')
+# Visualize the images
+plt.figure(figsize=(15, 5))
 
-axes[2].imshow(output, cmap='gray')
-axes[2].set_title('Predicted Label')
-axes[2].axis('off')
+plt.subplot(1, 3, 1)
+plt.title('Original Image')
+plt.imshow(images_np.squeeze(), cmap='gray')  # Assuming grayscale image
+
+plt.subplot(1, 3, 2)
+plt.title('Ground Truth Label')
+plt.imshow(labels_np.transpose(1, 2, 0), cmap='gray')  # Assuming labels are one-hot encoded
+
+plt.subplot(1, 3, 3)
+plt.title('Predicted Output')
+plt.imshow(outputs_np.transpose(1, 2, 0), cmap = 'gray')  # Assuming predicted output is one-hot encoded
 
 plt.tight_layout()
-# Save the figure to the 'Figures' folder
 plt.savefig('figures/unet_sample_prediction.png')
+
+
+# num_images_to_visualize = 1
+# with torch.no_grad():
+#     net.eval()
+
+#     for i, (images, labels) in enumerate(val_loader):
+#         if i >= num_images_to_visualize:
+#             break
+
+#         images, labels = images.to(device), labels.to(device)
+#         images = images.to(torch.float32)
+
+#         # Forward pass
+#         output = net(images)
+
+#         # Convert output and labels to numpy arrays
+#         images_np = images.cpu().numpy()[0]  # Remove batch dimension and select first image
+#         output_np = output.cpu().numpy()[0]  # Remove batch dimension and select first prediction
+#         labels_np = labels.cpu().numpy()[0]  # Remove batch dimension and select first label
+
+#         # print shape of output, labels, and images
+#         print(f'Output shape: {output_np.shape}')
+#         print(f'Labels shape: {labels_np.shape}')
+#         print(f'Images shape: {images_np.shape}')
+
+#         # Plot original image, ground truth label, and predicted output
+#         plt.figure(figsize=(15, 5))
+
+#         plt.subplot(1, 3, 1)
+#         plt.title('Original Image')
+#         plt.imshow(images_np[0], cmap='gray')
+
+#         plt.subplot(1, 3, 2)
+#         plt.title('Ground Truth Label')
+#         for ch in range(labels_np.shape[0]):
+#             plt.imshow(labels_np[ch], cmap='gray', alpha=0.3)  # Use alpha to overlay each channel
+#         plt.colorbar()
+
+#         plt.subplot(1, 3, 3)
+#         plt.title('Predicted Output')
+#         for ch in range(output_np.shape[0]):
+#             plt.imshow(output_np[ch], cmap='gray', alpha=0.3)  # Use alpha to overlay each channel
+#         plt.colorbar()
+
+#         plt.tight_layout()
+#         plt.savefig('figures/unet_sample_prediction.png')
+
+
+# num_images_to_visualize = 1
+# with torch.no_grad():
+#     net.eval()
+
+#     for i, (images, labels) in enumerate(val_loader):
+#         if i >= num_images_to_visualize:
+#             break
+
+#         images, labels = images.to(device), labels.to(device)
+#         images = images.to(torch.float32)
+
+#         # Forward pass
+#         output = net(images)
+
+#         # Convert output and labels to numpy arrays
+#         images_np = images.cpu().numpy()
+#         output_np = output.cpu().numpy()
+#         labels_np = labels.cpu().numpy()
+
+#         # remove batch dimension
+#         images_np = np.squeeze(images_np)
+#         output_np = np.squeeze(output_np)
+#         labels_np = np.squeeze(labels_np)
+
+#         # print shape of output, labels, and images
+#         print(f'Output shape: {output_np.shape}')
+#         print(f'Labels shape: {labels_np.shape}')
+#         print(f'Images shape: {images_np.shape}')
+
+#         j = 1
+
+#         # Plot original image, ground truth label, and predicted output
+#         plt.figure(figsize=(15, 5))
+
+#         plt.subplot(1, 3, 1)
+#         plt.title('Original Image')
+#         plt.imshow(images_np[j, 0, :, :], cmap='gray')
+
+#         # Visualize each channel of the label separately
+#         plt.subplot(1, 3, 2)
+#         plt.title('Ground Truth Label')
+#         for ch in range(labels_np.shape[1]):
+#             plt.imshow(labels_np[j, ch, :, :], cmap='gray', alpha=0.3)  # Use alpha to overlay each channel
+#         plt.colorbar()
+
+#         plt.subplot(1, 3, 3)
+#         plt.title('Predicted Output')
+#         for ch in range(output_np.shape[1]):
+#             plt.imshow(output_np[j, ch, :, :], cmap='gray', alpha=0.3)  # Use alpha to overlay each channel
+#         plt.colorbar()
+
+#         plt.tight_layout()
+#         plt.savefig('figures/unet_sample_prediction.png')
+
+
+
+
+
+
+# # For just 1 image, show the original, the label and the prediction side by side
+# net.eval()
+# with torch.no_grad():
+#     for images, labels in test_loader:
+#         images, labels = get_variable(images), get_variable(labels)
+#         outputs = net(images)
+#         break
+    
+# image = images[0].squeeze().cpu().numpy()
+# label = labels[0].squeeze().cpu().numpy()
+# output = outputs[0].squeeze().cpu().numpy()
+
+# # Rearrange dimensions from (3, 256, 256) to (256, 256, 3)
+# image = np.transpose(image, (1, 2, 0))  # If image shape is (3, 256, 256)
+# label = np.transpose(label, (1, 2, 0))  # If label shape is (3, 256, 256)
+# output = np.transpose(output, (1, 2, 0))  # If output shape is (3, 256, 256)
+
+# fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+
+# axes[0].imshow(image, cmap='gray')
+# axes[0].set_title('Original Image')
+# axes[0].axis('off')
+
+# axes[1].imshow(label, cmap='gray')
+# axes[1].set_title('Actual Label')
+# axes[1].axis('off')
+
+# axes[2].imshow(output, cmap='gray')
+# axes[2].set_title('Predicted Label')
+# axes[2].axis('off')
+
+# plt.tight_layout()
+# # Save the figure to the 'Figures' folder
+# plt.savefig('figures/unet_sample_prediction.png')
