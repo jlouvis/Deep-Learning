@@ -144,6 +144,13 @@ def accuracy(outputs, labels):
     correct = (predicted == labels).sum().item()
     return correct / total
 
+
+# Function to add Gaussian noise to images
+def add_gaussian_noise(image, mean=0, std=1):
+    noise = torch.randn(image.size()) * std + mean
+    noisy_image = image + noise
+    return noisy_image
+
 # Initialize lists to store training and validation metrics
 train_losses = []
 train_accuracies = []
@@ -157,9 +164,14 @@ for epoch in range(n_epochs):
     train_acc = 0.0
     for images, labels in train_loader:
         images, labels = get_variable(images), get_variable(labels)
+
+        # Add Gaussian noise to images
+        noisy_images = add_gaussian_noise(images)
+
+
         optimizer_unet.zero_grad()
 
-        outputs = net(images)
+        outputs = net(noisy_images)
         loss = loss_unet(outputs, labels.argmax(dim=1))
         loss.backward()
         optimizer_unet.step()
@@ -181,7 +193,10 @@ for epoch in range(n_epochs):
     with torch.no_grad():
         for images, labels in val_loader:
             images, labels = get_variable(images), get_variable(labels)
-            outputs = net(images)
+           # Add Gaussian noise to images
+            noisy_images = add_gaussian_noise(images)
+
+            outputs = net(noisy_images)
             loss = loss_unet(outputs, labels.argmax(dim=1))
 
             val_loss += loss.item() * images.size(0)

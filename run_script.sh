@@ -38,5 +38,4 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # run training
-python3 unet_train_noise.py
-# python3 VGG_correct_try_pnt.py
+python3 unet_train.py
