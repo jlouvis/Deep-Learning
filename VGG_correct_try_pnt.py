@@ -190,7 +190,7 @@ class VGGnet(nn.Module):
         # Output layer
         out = self.outconv(xd22)
 
-        out = F.interpolate(out, size=(501, 501), mode='bilinear', align_corners=False)
+        #out = F.interpolate(out, size=(501, 501), mode='bilinear', align_corners=False)
 
         return out
 
@@ -204,22 +204,33 @@ net.to(device)
 #print(net)
 
 class DiceLoss(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes=3):
         super(DiceLoss, self).__init__()
+        self.num_classes = num_classes
 
     def forward(self, prediction, target):
         smooth = 1e-5
 
-        intersection = torch.sum(prediction * target)
-        union = torch.sum(prediction) + torch.sum(target)
+        # Calculate Dice coefficient for each class
+        dice_coefficients = []
+        for class_index in range(self.num_classes):
+            class_prediction = prediction[:, class_index, :, :]
+            class_target = (target == class_index).float()
 
-        dice_coefficient = (2.0 * intersection + smooth) / (union + smooth)
+            intersection = torch.sum(class_prediction * class_target)
+            union = torch.sum(class_prediction) + torch.sum(class_target)
 
-        return 1.0 - dice_coefficient
-# loss function: Cross entropy loss
-loss_VGGnet = DiceLoss()
+            dice_coefficient = (2.0 * intersection + smooth) / (union + smooth)
+            dice_coefficients.append(dice_coefficient)
 
-num_classes = 3  # Change this value based on your specific number of classes
+        # Average Dice coefficient over all classes
+        average_dice_coefficient = sum(dice_coefficients) / self.num_classes
+
+        return 1.0 - average_dice_coefficient
+
+# Usage:
+num_classes = 3  # Change this to the actual number of classes in your segmentation task
+loss_VGGnet = DiceLoss(num_classes=num_classes)
 
 # Define the Cross Entropy Loss
 #loss_VGGnet = nn.CrossEntropyLoss()
@@ -227,12 +238,12 @@ num_classes = 3  # Change this value based on your specific number of classes
 # optimizer: ADAM
 optimizer_VGGnet = optim.Adam(net.parameters(), lr=1e-3)
 
-train_images = images_tensors[:350]#[:10]#[:350]
+'''train_images = images_tensors[:350]#[:10]#[:350]
 train_labels = labels_tensors[:350]#[:10]#[:350]
 val_images = images_tensors[350:400]#[:11:16]#[350:400]
 val_labels = labels_tensors[350:400]#[:11:16]#[350:400]
 test_images = images_tensors[400:]#[17:21]#[400:]
-test_labels = labels_tensors[400:]#[17:21]#[400:]
+test_labels = labels_tensors[400:]#[17:21]#[400:]'''
 # batch size
 batch_size = 10
 
@@ -252,7 +263,7 @@ images, labels = next(iter(train_loader))
 # Print the image tensor shape
 print("Image tensor shape:", images.shape)
 
-print(labels.shape)
+print('Label shapes:',labels.shape)
 
 # number of epochs to train the model
 n_epochs = 50
@@ -264,7 +275,7 @@ val_steps = len(val_loader)//batch_size
 test_steps = len(test_loader)//batch_size
 
 # validation loss
-valid_loss_min = 20
+valid_loss_min = 20# I set it 20 instead of inf to chech weather 
 
 # lists to store training and validation losses
 train_losses = []
