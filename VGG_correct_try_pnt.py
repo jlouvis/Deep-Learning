@@ -47,7 +47,17 @@ for img_filename, lbl_filename in zip(image_files, label_files):
         single_label = ToTensor()(single_label)
         labels_tensors.append(single_label)
 
+labels_one_hot = [F.one_hot(label.squeeze().long(), num_classes=3).permute(2, 0, 1).float() for label in labels_cropped]
+labels_stacked = torch.stack(labels_one_hot)
+max_pixel = torch.max(torch.stack(images_256[0:400]))
+images_normalized = [image / max_pixel for image in images_256]
+dataset = TensorDataset(torch.stack(images_normalized), labels_stacked)
+#Splitting the dataset
+train_size = int(0.8 * len(dataset))
+val_size = int(0.1 * len(dataset))
+test_size = len(dataset) - train_size - val_size
 
+train_set, val_set, test_set = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
 
 '''images_tensors = []
 for subdirectory in os.listdir(path):
@@ -246,6 +256,7 @@ test_images = images_tensors[400:]#[17:21]#[400:]
 test_labels = labels_tensors[400:]#[17:21]#[400:]'''
 # batch size
 batch_size = 10
+
 
 # Create Tensor datasets
 train_data = TensorDataset(torch.stack(train_images), torch.stack(train_labels))
