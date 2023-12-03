@@ -48,18 +48,37 @@ for img_filename, lbl_filename in zip(image_files, label_files):
         labels_tensors.append(single_label)
 
 
-
+# Convert labels to one-hot encoding
 labels_one_hot = [F.one_hot(label.squeeze().long(), num_classes=3).permute(2, 0, 1).float() for label in labels_tensors]
+# Stack the one-hot encoded labels together
 labels_stacked = torch.stack(labels_one_hot)
+# Normalize the images
 max_pixel = torch.max(torch.stack(images_tensors[0:400]))
 images_normalized = [image / max_pixel for image in images_tensors]
+
+# Build Tensor dataset
 dataset = TensorDataset(torch.stack(images_normalized), labels_stacked)
-#Splitting the dataset
+
+# Split in train (80%), validation (10%) and test (10%) sets
 train_size = int(0.8 * len(dataset))
 val_size = int(0.1 * len(dataset))
 test_size = len(dataset) - train_size - val_size
 
 train_set, val_set, test_set = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
+# batch size
+batch_size = 10
+
+# Build data loader
+train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
+test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
+
+
+# Get one batch of training data
+images, labels = next(iter(train_loader))
+
+print("Images tensor shape:", images_normalized[0].shape)
+print("Labels tensor shape:", labels_stacked[0].shape)
 
 '''images_tensors = []
 for subdirectory in os.listdir(path):
@@ -94,6 +113,7 @@ def get_numpy(x):
     if use_cuda:
         return x.cpu().data.numpy()
     return x.data.numpy()
+
 class VGGnet(nn.Module):
     def __init__(self, n_class):
         super().__init__()
@@ -257,40 +277,6 @@ val_labels = labels_tensors[350:400]#[:11:16]#[350:400]
 test_images = images_tensors[400:]#[17:21]#[400:]
 test_labels = labels_tensors[400:]#[17:21]#[400:]'''
 
-# Convert labels to one-hot encoding
-labels_one_hot = [F.one_hot(label.squeeze().long(), num_classes=3).permute(2, 0, 1).float() for label in labels_tensors]
-# Stack the one-hot encoded labels together
-labels_stacked = torch.stack(labels_one_hot)
-# Normalize the images
-max_pixel = torch.max(torch.stack(images_tensors[0:400]))
-images_normalized = [image / max_pixel for image in images_tensors]
-
-# Build Tensor dataset
-dataset = TensorDataset(torch.stack(images_normalized), labels_stacked)
-
-# Split in train (80%), validation (10%) and test (10%) sets
-train_size = int(0.8 * len(dataset))
-val_size = int(0.1 * len(dataset))
-test_size = len(dataset) - train_size - val_size
-
-train_set, val_set, test_set = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
-# batch size
-batch_size = 10
-
-# Build data loader
-train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
-test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
-
-
-# Get one batch of training data
-images, labels = next(iter(train_loader))
-
-# Print the image tensor shape
-print("Image tensor shape:", images.shape)
-
-print('Label shapes:',labels.shape)
-
 # number of epochs to train the model
 n_epochs = 50
 
@@ -321,19 +307,26 @@ for epoch in range(n_epochs):
     net.train()
     # loop over training data
     for images, labels in train_loader:
+
         # send the input to device
         images, labels = images.to(device), labels.to(device)
         images = images.to(torch.float32)
         labels = labels.to(torch.long)
         # Complete forward pass through model
         output = net(images)
+        print('output:',output.shape)
+        labels_resized = F.interpolate(labels.float(), size=(240, 240), mode='nearest').to(torch.long)
+        print("labels resized:",labels_resized.shape)
 
-        output_tensor = output.permute(0,2,3,1)
-        output_flattened = output_tensor.reshape(-1, 3)
-        labels_flattened = labels.view(-1)
+        print("Inputs to the loss: output->",output_tensor.shape)
+        print("Inputs to the loss: labels->",labels_resized.shape)
+
+        #output_tensor = output.permute(0,2,3,1)
+        #output_flattened = output_tensor.reshape(-1, 3)
+        #labels_flattened = labels.view(-1)
 
         # Compute the loss
-        train_loss = loss_VGGnet(output, labels)
+        train_loss = loss_VGGnet(output, labels_resized)
         
 
         # clean up gradients from previous run
@@ -362,11 +355,15 @@ for epoch in range(n_epochs):
 
             # Complete forward pass through model
             output = net(images)
+            labels_resized = F.interpolate(labels.float(), size=(240, 240), mode='nearest').to(torch.long)
+
+
+
             output_tensor = output.permute(0,2,3,1)
             output_flattened = output_tensor.reshape(-1, 3)
             labels_flattened = labels.view(-1)
             # Compute the loss
-            val_loss = loss_VGGnet(output, labels)
+            val_loss = loss_VGGnet(output, labels_resized)
             #print('val_loss:',val_loss)
 
             # add the loss to the validation set's running loss 
