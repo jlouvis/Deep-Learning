@@ -278,9 +278,9 @@ train_set, val_set, test_set = torch.utils.data.random_split(dataset, [train_siz
 batch_size = 10
 
 # Build data loader
-train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
-test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
+train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
+test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 
 
 # Get one batch of training data
