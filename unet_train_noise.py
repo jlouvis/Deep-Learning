@@ -146,6 +146,7 @@ def accuracy(outputs, labels):
 
 # Function to add Gaussian noise to images
 def add_gaussian_noise(image, mean=0, std=1):
+    
     noise = torch.randn(image.size(), device=image.device) * std + mean
     noisy_image = image + noise
     return noisy_image
