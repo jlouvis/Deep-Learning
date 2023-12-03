@@ -20,7 +20,7 @@ from PIL import Image
 import time
 import torch
 # import unet
-from unet_batchnorm_architecture import Unet_batch as Unet
+from unet_architecture_batchnorm_L2 import Unet_batch_dropout as Unet
 
 # GPU
 use_cuda = torch.cuda.is_available()
@@ -72,21 +72,24 @@ for img_filename, lbl_filename in zip(image_files, label_files):
         single_label = ToTensor()(single_label)
         labels_tensors.append(single_label)
 
-
-# Define data augmentation transformations
-augmentation_transforms  = transforms.Compose([
-    transforms.RandomHorizontalFlip(),   # Randomly flip the image horizontally
-    transforms.RandomVerticalFlip(),     # Randomly flip the image vertically
-    transforms.RandomRotation(degrees=45), # Randomly rotate the image by a certain degree
-    # Add more transformations as needed
-])
+images_tensors = images_tensors = [0:30]
+labels_tensors = labels_tensors = [0:30]
 
 
-# Apply transformations to both images and labels simultaneously
-transformed_data = [(augmentation_transforms(image), augmentation_transforms(label)) for image, label in zip(images_tensors, labels_tensors)]
+# # Define data augmentation transformations
+# augmentation_transforms  = transforms.Compose([
+#     transforms.RandomHorizontalFlip(),   # Randomly flip the image horizontally
+#     transforms.RandomVerticalFlip(),     # Randomly flip the image vertically
+#     transforms.RandomRotation(degrees=45), # Randomly rotate the image by a certain degree
+#     # Add more transformations as needed
+# ])
 
-# Separate the transformed images and labels
-images_tensors, labels_tensors = zip(*transformed_data)
+
+# # Apply transformations to both images and labels simultaneously
+# transformed_data = [(augmentation_transforms(image), augmentation_transforms(label)) for image, label in zip(images_tensors, labels_tensors)]
+
+# # Separate the transformed images and labels
+# images_tensors, labels_tensors = zip(*transformed_data)
 
 
 # Crop images and labels to 256x256 and convert images to float
@@ -134,7 +137,7 @@ optimizer_unet = optim.Adam(net.parameters(), lr=1e-5, weight_decay=0.001)
 #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer_unet, 'min', patience=2)
 
 # number of epochs to train the model
-n_epochs = 50
+n_epochs = 70
 
 # function to calculate accuracy
 def accuracy(outputs, labels):
@@ -222,7 +225,7 @@ plt.title('Train and Validation Loss')
 plt.legend()
 # show val loss as text on plot for last epoch
 plt.text(n_epochs, val_losses[-1], f'{val_losses[-1]:.4f}')
-plt.savefig('figures/unet_lossflip.png')
+plt.savefig('figures/unet_lossfew.png')
 
 # Plot the train and validation accuracy
 plt.figure(figsize=(10, 5))
@@ -234,7 +237,7 @@ plt.title('Train and Validation Accuracy')
 plt.legend()
 # show val accuracy as text on plot for last epoch
 plt.text(n_epochs, val_accuracies[-1], f'{val_accuracies[-1]:.4f}')
-plt.savefig('figures/unet_accuracyflip.png')
+plt.savefig('figures/unet_accuracyfew.png')
 
 # # For just 1 image, show the original, the label and the prediction side by side
 # net.eval()

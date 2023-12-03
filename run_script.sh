@@ -2,7 +2,7 @@
 #!/bin/sh
 ### General options
 ### –- specify queue -- gpua100, gpuv100, gpua10, gpua40
-#BSUB -q gpuv100
+#BSUB -q gpua40
 ### -- set the job Name --
 #BSUB -J testjob
 ### -- ask for number of cores (default: 1) --
@@ -10,7 +10,7 @@
 ### -- Select the resources: 1 gpu in exclusive process mode --
 #BSUB -gpu "num=1:mode=exclusive_process"
 ### -- set walltime limit: hh:mm --  maximum 24 hours for GPU-queues right now
-#BSUB -W 00:20
+#BSUB -W 00:30
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=20GB]"
 ### -- set the email address --
@@ -38,5 +38,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # run training
-# python3 unet_train_noise.py
-python3 VGG_correct_try_pnt.py
+# python3 unet_train.py
+python3 unet_train_noise.py
+# python3 VGG_correct_try_pnt.py
+# python3 VGGnet_Shuli.py
