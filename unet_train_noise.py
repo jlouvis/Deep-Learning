@@ -119,7 +119,7 @@ test_size = len(dataset) - train_size - val_size
 train_set, val_set, test_set = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
 
 # batch size
-batch_size = 4
+batch_size = 2
 
 # Build data loader
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True) # shuffle training set
@@ -130,7 +130,7 @@ test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False) # no ne
 loss_unet = nn.CrossEntropyLoss()
 
 # optimizer: ADAM
-optimizer_unet = optim.Adam(net.parameters(), lr=1e-5)
+optimizer_unet = optim.Adam(net.parameters(), lr=1e-5, weight_decay=0.001)
 #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer_unet, 'min', patience=2)
 
 # number of epochs to train the model
