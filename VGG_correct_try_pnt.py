@@ -31,7 +31,7 @@ labels_tensors = []
 
 image_files = sorted(os.listdir(image_path))
 label_files = sorted(os.listdir(label_path))
-
+# Reading the dataset
 for img_filename, lbl_filename in zip(image_files, label_files):
     if img_filename[9:12] == lbl_filename[7:10]:  # Matching filenames by position
         img_filepath = os.path.join(image_path, img_filename)
@@ -46,6 +46,8 @@ for img_filename, lbl_filename in zip(image_files, label_files):
         single_label = Image.open(lbl_filepath)
         single_label = ToTensor()(single_label)
         labels_tensors.append(single_label)
+
+
 
 labels_one_hot = [F.one_hot(label.squeeze().long(), num_classes=3).permute(2, 0, 1).float() for label in labels_tensors]
 labels_stacked = torch.stack(labels_one_hot)
@@ -254,19 +256,32 @@ val_images = images_tensors[350:400]#[:11:16]#[350:400]
 val_labels = labels_tensors[350:400]#[:11:16]#[350:400]
 test_images = images_tensors[400:]#[17:21]#[400:]
 test_labels = labels_tensors[400:]#[17:21]#[400:]'''
+
+# Convert labels to one-hot encoding
+labels_one_hot = [F.one_hot(label.squeeze().long(), num_classes=3).permute(2, 0, 1).float() for label in labels_tensors]
+# Stack the one-hot encoded labels together
+labels_stacked = torch.stack(labels_one_hot)
+# Normalize the images
+max_pixel = torch.max(torch.stack(images_tensors[0:400]))
+images_normalized = [image / max_pixel for image in images_tensors]
+
+# Build Tensor dataset
+dataset = TensorDataset(torch.stack(images_normalized), labels_stacked)
+
+# Split in train (80%), validation (10%) and test (10%) sets
+train_size = int(0.8 * len(dataset))
+val_size = int(0.1 * len(dataset))
+test_size = len(dataset) - train_size - val_size
+
+train_set, val_set, test_set = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
 # batch size
 batch_size = 10
 
-
-# Create Tensor datasets
-train_data = TensorDataset(torch.stack(train_images), torch.stack(train_labels))
-val_data = TensorDataset(torch.stack(val_images), torch.stack(val_labels))
-test_data = TensorDataset(torch.stack(test_images), torch.stack(test_labels))
-
-# Create DataLoaders
+# Build data loader
 train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
+
 
 # Get one batch of training data
 images, labels = next(iter(train_loader))
@@ -286,7 +301,7 @@ val_steps = len(val_loader)//batch_size
 test_steps = len(test_loader)//batch_size
 
 # validation loss
-valid_loss_min = 20# I set it 20 instead of inf to chech weather 
+valid_loss_min = 0# I set it 0 instead of inf 
 
 # lists to store training and validation losses
 train_losses = []
@@ -295,8 +310,6 @@ validation_losses = []
 # lists to store training and validation accuracies
 train_accuracies = []
 validation_accuracies = []
-
-
 
 # start time (for printing elapsed time per epoch)
 starttime = time.time()
@@ -373,7 +386,8 @@ for epoch in range(n_epochs):
     # print training/validation statistics
     print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}'.format(
         epoch+1, avg_train_loss, avg_val_loss))
-    
+
+  
 # display time elapsed for epoch
 endtime = time.time()
 print(f"Elapsed time: {(endtime - starttime)/60:.2f} min")
