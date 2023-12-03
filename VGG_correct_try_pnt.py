@@ -318,7 +318,7 @@ for epoch in range(n_epochs):
         labels_resized = F.interpolate(labels.float(), size=(240, 240), mode='nearest').to(torch.long)
         print("labels resized:",labels_resized.shape)
 
-        print("Inputs to the loss: output->",output_tensor.shape)
+        print("Inputs to the loss: output->",output.shape)
         print("Inputs to the loss: labels->",labels_resized.shape)
 
         #output_tensor = output.permute(0,2,3,1)
