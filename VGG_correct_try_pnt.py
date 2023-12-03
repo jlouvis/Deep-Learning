@@ -317,13 +317,13 @@ for epoch in range(n_epochs):
         print('output:',output.shape)
         labels_resized = F.interpolate(labels.float(), size=(240, 240), mode='nearest').to(torch.long)
         print("labels resized:",labels_resized.shape)
-
+        output_tensor = output.permute(0,2,3,1)
         print("Inputs to the loss: output->",output.shape)
         print("Inputs to the loss: labels->",labels_resized.shape)
 
         #output_tensor = output.permute(0,2,3,1)
         #output_flattened = output_tensor.reshape(-1, 3)
-        #labels_flattened = labels.view(-1)
+        labels_flattened = labels_resized.view(-1)
 
         # Compute the loss
         train_loss = loss_VGGnet(output, labels_resized)
