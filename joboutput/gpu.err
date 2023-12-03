@@ -5,6 +5,6 @@ Loading python3/3.9.10
   Loading requirement: gcc/10.3.0-binutils-2.36.1
 Loaded module: cuda/11.6
 Traceback (most recent call last):
-  File "/zhome/34/9/181032/Deep-Learning/VGG_correct_try_pnt.py", line 262, in <module>
-    train_data = TensorDataset(torch.stack(train_images), torch.stack(train_labels))
-NameError: name 'train_images' is not defined
+  File "/zhome/34/9/181032/Deep-Learning/VGG_correct_try_pnt.py", line 321, in <module>
+    print("Inputs to the loss: output->",output_tensor.shape)
+NameError: name 'output_tensor' is not defined

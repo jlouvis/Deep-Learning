@@ -1,1 +1,7 @@
+Images tensor shape: torch.Size([1, 501, 501])
+Labels tensor shape: torch.Size([3, 501, 501])
 Running GPU.
+Train steps: 4
+Training started!
+output: torch.Size([10, 3, 240, 240])
+labels resized: torch.Size([10, 3, 240, 240])
