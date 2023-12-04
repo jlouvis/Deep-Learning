@@ -20,8 +20,8 @@ from PIL import Image
 import time
 import torch
 # import unet batchnorm
-import vggnet_architecture
-from vggnet_architecture import VGGnet
+import vggnet_architecture_2
+from vggnet_architecture_2 import VGGnet
 
 
 # GPU
@@ -37,12 +37,18 @@ def get_numpy(x):
         return x.cpu().data.numpy()
     return x.data.numpy()
 
-net = VGGnet(n_class=3)
+vggnet = VGGnet(3) # 3 classes
+def weights_init(m):
+    if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+        nn.init.xavier_normal_(m.weight.data)
+
+vggnet.apply(weights_init)
+
 if use_cuda:
-    net.cuda()
+    vggnet.cuda()
 
 device = torch.device("cuda" if use_cuda else "cpu")  # use cuda or cpu
-net.to(device)
+vggnet.to(device)
 
 
 # Set random seed for reproducibility
@@ -131,7 +137,7 @@ loss_VGGnet = nn.CrossEntropyLoss()
 # loss_VGGnet = DiceLoss()
 
 # optimizer: ADAM
-optimizer_VGGnet = optim.Adam(net.parameters(), lr=1e-5)
+optimizer_VGGnet = optim.Adam(vggnet.parameters(), lr=1e-5)
 
 # number of epochs to train the model
 n_epochs = 50
@@ -151,14 +157,14 @@ val_accuracies = []
 
 for epoch in range(n_epochs):
     # Training
-    net.train()
+    vggnet.train()
     train_loss = 0.0
     train_acc = 0.0
     for images, labels in train_loader:
         images, labels = get_variable(images), get_variable(labels)
         optimizer_VGGnet.zero_grad()
 
-        outputs = net(images)
+        outputs = vggnet(images)
         loss = loss_VGGnet(outputs, labels.argmax(dim=1))
         loss.backward()
         optimizer_VGGnet.step()
@@ -174,13 +180,13 @@ for epoch in range(n_epochs):
     train_accuracies.append(train_acc)
 
     # Validation
-    net.eval()
+    vggnet.eval()
     val_loss = 0.0
     val_acc = 0.0
     with torch.no_grad():
         for images, labels in val_loader:
             images, labels = get_variable(images), get_variable(labels)
-            outputs = net(images)
+            outputs = vggnet(images)
             loss = loss_VGGnet(outputs, labels.argmax(dim=1))
 
             val_loss += loss.item() * images.size(0)
@@ -220,38 +226,3 @@ plt.legend()
 # show val accuracy as text on plot for last epoch
 plt.text(n_epochs, val_accuracies[-1], f'{val_accuracies[-1]:.4f}')
 plt.savefig('figures/vggnet_accuracy.png')
-
-# For just 1 image, show the original, the label and the prediction side by side
-net.eval()
-with torch.no_grad():
-    for images, labels in test_loader:
-        images, labels = get_variable(images), get_variable(labels)
-        outputs = net(images)
-        break
-    
-image = images[0].squeeze().cpu().numpy()
-label = labels[0].squeeze().cpu().numpy()
-output = outputs[0].squeeze().cpu().numpy()
-
-# Rearrange dimensions from (3, 256, 256) to (256, 256, 3)
-image = np.transpose(image, (1, 2, 0))  # If image shape is (3, 256, 256)
-label = np.transpose(label, (1, 2, 0))  # If label shape is (3, 256, 256)
-output = np.transpose(output, (1, 2, 0))  # If output shape is (3, 256, 256)
-
-fig, axes = plt.subplots(1, 3, figsize=(12, 4))
-
-axes[0].imshow(image, cmap='gray')
-axes[0].set_title('Original Image')
-axes[0].axis('off')
-
-axes[1].imshow(label, cmap='gray')
-axes[1].set_title('Actual Label')
-axes[1].axis('off')
-
-axes[2].imshow(output, cmap='gray')
-axes[2].set_title('Predicted Label')
-axes[2].axis('off')
-
-plt.tight_layout()
-# Save the figure to the 'Figures' folder
-plt.savefig('figures/vggnet_sample_prediction.png')
