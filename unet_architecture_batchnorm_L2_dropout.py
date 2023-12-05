@@ -3,7 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 
 class Unet_batch_dropout(nn.Module):
-    def __init__(self, n_class):
+    def __init__(self, n_class, dropout_rate=0.3):
         super(Unet_batch_dropout, self).__init__()
 
         # Encoder (downsampling)
