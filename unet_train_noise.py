@@ -19,8 +19,10 @@ from glob import glob
 from PIL import Image
 import time
 import torch
-# import unet
+# # import unet
+# import unet_architecture
 from unet_architecture_batchnorm_L2 import Unet_batch_dropout as Unet
+from noise_function import add_noise_to_tensor as add_noise_to_tensor
 
 # GPU
 use_cuda = torch.cuda.is_available()
@@ -72,38 +74,54 @@ for img_filename, lbl_filename in zip(image_files, label_files):
         single_label = ToTensor()(single_label)
         labels_tensors.append(single_label)
 
-images_tensors = images_tensors = [0:30]
-labels_tensors = labels_tensors = [0:30]
+# Define data augmentation transformations
+hflip  = transforms.Compose([
+    transforms.RandomHorizontalFlip(),   # Randomly flip the image horizontally
+    
+])
+
+# Define data augmentation transformations
+vflip  = transforms.Compose([
+    transforms.RandomVerticalFlip(),   # Randomly flip the image horizontally
+    
+])
+
+# Define data augmentation transformations
+rot  = transforms.Compose([
+    transforms.RandomRotation(degrees=90), # Randomly rotate the image by a certain degree
+])
 
 
-# # Define data augmentation transformations
-# augmentation_transforms  = transforms.Compose([
-#     transforms.RandomHorizontalFlip(),   # Randomly flip the image horizontally
-#     transforms.RandomVerticalFlip(),     # Randomly flip the image vertically
-#     transforms.RandomRotation(degrees=45), # Randomly rotate the image by a certain degree
-#     # Add more transformations as needed
-# ])
+# Apply transformations to both images and labels simultaneously
+hflip_data = [(hflip(image), hflip(label)) for image, label in zip(images_tensors, labels_tensors)]
+vflip_data = [(vflip(image), vflip(label)) for image, label in zip(images_tensors, labels_tensors)]
+rot_data = [(rot(image), rot(label)) for image, label in zip(images_tensors, labels_tensors)]
 
 
-# # Apply transformations to both images and labels simultaneously
-# transformed_data = [(augmentation_transforms(image), augmentation_transforms(label)) for image, label in zip(images_tensors, labels_tensors)]
+# Add augmented data to original data
+images_tensors.extend([image for image, label in hflip_data])
+labels_tensors.extend([label for image, label in hflip_data])
+images_tensors.extend([image for image, label in vflip_data])
+labels_tensors.extend([label for image, label in vflip_data])
+images_tensors.extend([image for image, label in rot_data])
+labels_tensors.extend([label for image, label in rot_data])
 
-# # Separate the transformed images and labels
-# images_tensors, labels_tensors = zip(*transformed_data)
+# Convert lists to tensors
+images_tensors = torch.stack(images_tensors)
+labels_tensors = torch.stack(labels_tensors)
 
-
-# Crop images and labels to 256x256 and convert images to float
-transform = transforms.CenterCrop((256, 256))
+# Crop images and labels to 128x128 and convert images to float
+transform = transforms.CenterCrop((128, 128))
 images_cropped = [transform(image) for image in images_tensors]
 images_256 = [image.type(torch.FloatTensor) for image in images_cropped]
 labels_cropped = [transform(label) for label in labels_tensors]
 
-
-# Convert labels to one-hot encoding
-labels_one_hot = [F.one_hot(label.squeeze().long(), num_classes=3).permute(2, 0, 1).float() for label in labels_cropped]
-
-# Stack the one-hot encoded labels together
-labels_stacked = torch.stack(labels_one_hot)
+# convert labels to be 0, 1, 2
+labels_cropped = [label * 2 for label in labels_cropped]
+# convert labels to be long tensor
+labels_cropped = [label.long() for label in labels_cropped]
+# remove the third dimension from labels
+labels_cropped = [label.squeeze(0) for label in labels_cropped]
 
 max_pixel = torch.max(torch.stack(images_256[0:400]))
 # Normalize the images
@@ -112,7 +130,7 @@ images_normalized = [image / max_pixel for image in images_256]
 # Build data sets
 
 # Build Tensor dataset
-dataset = TensorDataset(torch.stack(images_normalized), labels_stacked)
+dataset = TensorDataset(torch.stack(images_normalized), torch.stack(labels_cropped))
 
 # Split in train (80%), validation (10%) and test (10%) sets
 train_size = int(0.8 * len(dataset))
@@ -122,7 +140,7 @@ test_size = len(dataset) - train_size - val_size
 train_set, val_set, test_set = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
 
 # batch size
-batch_size = 2
+batch_size = 4
 
 # Build data loader
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True) # shuffle training set
@@ -133,11 +151,10 @@ test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False) # no ne
 loss_unet = nn.CrossEntropyLoss()
 
 # optimizer: ADAM
-optimizer_unet = optim.Adam(net.parameters(), lr=1e-5, weight_decay=0.001)
-#scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer_unet, 'min', patience=2)
+optimizer_unet = optim.Adam(net.parameters(), lr=1e-5, weight_decay=1e-5)
 
 # number of epochs to train the model
-n_epochs = 70
+n_epochs = 50
 
 # function to calculate accuracy
 def accuracy(outputs, labels):
@@ -145,14 +162,6 @@ def accuracy(outputs, labels):
     total = labels.size(0) * labels.size(1) * labels.size(2)
     correct = (predicted == labels).sum().item()
     return correct / total
-
-
-# Function to add Gaussian noise to images
-def add_gaussian_noise(image, mean=0, std=1):
-    
-    noise = torch.randn(image.size(), device=image.device) * std + mean
-    noisy_image = image + noise
-    return noisy_image
 
 # Initialize lists to store training and validation metrics
 train_losses = []
@@ -168,19 +177,18 @@ for epoch in range(n_epochs):
     for images, labels in train_loader:
         images, labels = get_variable(images), get_variable(labels)
 
-        # Add Gaussian noise to images
-        noisy_images = add_gaussian_noise(images)
+        noisy_images = add_noise_to_tensor(images)
 
 
         optimizer_unet.zero_grad()
 
         outputs = net(noisy_images)
-        loss = loss_unet(outputs, labels.argmax(dim=1))
+        loss = loss_unet(outputs, labels)
         loss.backward()
         optimizer_unet.step()
 
         train_loss += loss.item() * images.size(0)
-        train_acc += accuracy(outputs, labels.argmax(dim=1)) * images.size(0)
+        train_acc += accuracy(outputs, labels) * images.size(0)
 
     train_loss = train_loss / len(train_loader.dataset)
     train_acc = train_acc / len(train_loader.dataset)
@@ -196,14 +204,11 @@ for epoch in range(n_epochs):
     with torch.no_grad():
         for images, labels in val_loader:
             images, labels = get_variable(images), get_variable(labels)
-           # Add Gaussian noise to images
-            noisy_images = add_gaussian_noise(images)
-
-            outputs = net(noisy_images)
-            loss = loss_unet(outputs, labels.argmax(dim=1))
+            outputs = net(images)
+            loss = loss_unet(outputs, labels)
 
             val_loss += loss.item() * images.size(0)
-            val_acc += accuracy(outputs, labels.argmax(dim=1)) * images.size(0)
+            val_acc += accuracy(outputs, labels) * images.size(0)
 
     val_loss = val_loss / len(val_loader.dataset)
     val_acc = val_acc / len(val_loader.dataset)
@@ -226,7 +231,7 @@ plt.title('Train and Validation Loss')
 plt.legend()
 # show val loss as text on plot for last epoch
 plt.text(n_epochs, val_losses[-1], f'{val_losses[-1]:.4f}')
-plt.savefig('figures/unet_lossfew.png')
+plt.savefig('figures/unet_standard_loss.png')
 
 # Plot the train and validation accuracy
 plt.figure(figsize=(10, 5))
@@ -238,39 +243,42 @@ plt.title('Train and Validation Accuracy')
 plt.legend()
 # show val accuracy as text on plot for last epoch
 plt.text(n_epochs, val_accuracies[-1], f'{val_accuracies[-1]:.4f}')
-plt.savefig('figures/unet_accuracyfew.png')
+plt.savefig('figures/unet_standard_accuracy.png')
 
-# # For just 1 image, show the original, the label and the prediction side by side
-# net.eval()
-# with torch.no_grad():
-#     for images, labels in test_loader:
-#         images, labels = get_variable(images), get_variable(labels)
-#         outputs = net(images)
-#         break
-    
-# image = images[0].squeeze().cpu().numpy()
-# label = labels[0].squeeze().cpu().numpy()
-# output = outputs[0].squeeze().cpu().numpy()
+# plot 1 image from validation set with original, predicted, ground truth labels and (predicted - ground truth) labels
+net.eval()
+images, labels = next(iter(val_loader))
+images, labels = get_variable(images), get_variable(labels)
+outputs = net(images)
+_, predicted = torch.max(outputs, 1)
+predicted = predicted.squeeze(1)
+predicted = predicted.cpu().numpy()
+labels = labels.squeeze(1)
+labels = labels.cpu().numpy()
+images = images.cpu().numpy()
+images = np.transpose(images, (0, 2, 3, 1))
 
-# # Rearrange dimensions from (3, 256, 256) to (256, 256, 3)
-# image = np.transpose(image, (1, 2, 0))  # If image shape is (3, 256, 256)
-# label = np.transpose(label, (1, 2, 0))  # If label shape is (3, 256, 256)
-# output = np.transpose(output, (1, 2, 0))  # If output shape is (3, 256, 256)
-
-# fig, axes = plt.subplots(1, 3, figsize=(12, 4))
-
-# axes[0].imshow(image, cmap='gray')
-# axes[0].set_title('Original Image')
-# axes[0].axis('off')
-
-# axes[1].imshow(label, cmap='gray')
-# axes[1].set_title('Actual Label')
-# axes[1].axis('off')
-
-# axes[2].imshow(output, cmap='gray')
-# axes[2].set_title('Predicted Label')
-# axes[2].axis('off')
-
-# plt.tight_layout()
-# # Save the figure to the 'Figures' folder
-# plt.savefig('figures/unet_sample_prediction.png')
+fig, axes = plt.subplots(nrows=1, ncols=5, figsize=(20, 5))
+axes[0].imshow(images[0], cmap='gray')
+axes[0].set_title('Original Image')
+axes[1].imshow(labels[0], cmap='gray')
+axes[1].set_title('Ground Truth Label')
+axes[2].imshow(predicted[0], cmap='gray')
+axes[2].set_title('Predicted Label')
+axes[3].imshow(np.abs(labels[0] - predicted[0]), cmap='gray')
+axes[3].set_title('Difference')
+# visualize the confusion matrix for the predicted and ground truth labels
+confusion_matrix = np.zeros((3, 3))
+for i in range(3):
+    for j in range(3):
+        confusion_matrix[i, j] = np.sum((predicted == i) & (labels == j))
+axes[4].imshow(confusion_matrix)
+# show actual numbers in confusion matrix
+for i in range(3):
+    for j in range(3):
+        axes[4].text(j, i, int(confusion_matrix[i, j]), ha="center", va="center", color="red")
+axes[4].set_title('Confusion Matrix')
+axes[4].set_xlabel('Predicted Label')
+axes[4].set_ylabel('Ground Truth Label')
+plt.tight_layout()
+plt.savefig('figures/unet_standard.png')
