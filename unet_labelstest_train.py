@@ -19,9 +19,9 @@ from glob import glob
 from PIL import Image
 import time
 import torch
-# import unet
-import unet_architecture
-from unet_architecture import Unet
+# # import unet
+# import unet_architecture
+from unet_architecture_batchnorm_L2 import Unet_batch_dropout as Unet
 
 # GPU
 use_cuda = torch.cuda.is_available()
@@ -74,7 +74,7 @@ for img_filename, lbl_filename in zip(image_files, label_files):
         labels_tensors.append(single_label)
 
 # Crop images and labels to 256x256 and convert images to float
-transform = transforms.CenterCrop((256, 256))
+transform = transforms.CenterCrop((64, 64))
 images_cropped = [transform(image) for image in images_tensors]
 images_256 = [image.type(torch.FloatTensor) for image in images_cropped]
 labels_cropped = [transform(label) for label in labels_tensors]
@@ -119,7 +119,7 @@ test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False) # no ne
 loss_unet = nn.CrossEntropyLoss()
 
 # optimizer: ADAM
-optimizer_unet = optim.Adam(net.parameters(), lr=1e-5)
+optimizer_unet = optim.Adam(net.parameters(), lr=1e-5, weight_decay=1e-5)
 #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer_unet, 'min', patience=2)
 
 # number of epochs to train the model
@@ -230,6 +230,6 @@ axes[1].imshow(predicted[0])
 axes[1].set_title('Predicted Label')
 axes[2].imshow(labels[0])
 axes[2].set_title('Ground Truth Label')
-axes[3].imshow(predicted[0] - labels[0])
+axes[3].imshow(labels[0] - predicted[0])
 axes[3].set_title('Difference')
-plt.savefig('figures/unet_results_visually.png')
+plt.savefig('figures/unet_results_visuallyNEW.png')
