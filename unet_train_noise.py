@@ -111,7 +111,7 @@ images_tensors = torch.stack(images_tensors)
 labels_tensors = torch.stack(labels_tensors)
 
 # Crop images and labels to 128x128 and convert images to float
-transform = transforms.CenterCrop((128, 128))
+transform = transforms.CenterCrop((256, 256))
 images_cropped = [transform(image) for image in images_tensors]
 images_256 = [image.type(torch.FloatTensor) for image in images_cropped]
 labels_cropped = [transform(label) for label in labels_tensors]
