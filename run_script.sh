@@ -42,4 +42,4 @@ fi
 # python3 unet_train_noise.py
 # python3 VGG_correct_try_pnt.py
 # python3 VGGnet_Shuli.py
-python3 unet_train.py
+python3 unet_128_train.py
