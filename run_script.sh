@@ -2,7 +2,7 @@
 #!/bin/sh
 ### General options
 ### –- specify queue -- gpua100, gpuv100, gpua10, gpua40
-#BSUB -q gpua40
+#BSUB -q gpua100
 ### -- set the job Name --
 #BSUB -J testjob
 ### -- ask for number of cores (default: 1) --
@@ -42,4 +42,4 @@ fi
 # python3 unet_train_noise.py
 # python3 VGG_correct_try_pnt.py
 # python3 VGGnet_Shuli.py
-python3 unet_128_train.py
+python3 unet_64_train.py
