@@ -236,6 +236,8 @@ axes[4].imshow(confusion_matrix)
 for i in range(3):
     for j in range(3):
         axes[4].text(j, i, int(confusion_matrix[i, j]), ha="center", va="center", color="red")
+axes[4].set_xticks([0, 1, 2])
+axes[4].set_yticks([0, 1, 2])
 axes[4].set_title('Confusion Matrix')
 axes[4].set_xlabel('Predicted Label')
 axes[4].set_ylabel('Ground Truth Label')
